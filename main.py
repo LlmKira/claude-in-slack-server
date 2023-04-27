@@ -17,12 +17,15 @@ from sse_starlette.sse import EventSourceResponse
 
 from model import ConversationResponse, ConversationRequest, Message, Content, Author
 
-message_mappings: Dict[str, asyncio.Queue[str]] = {}
+message_mappings = {}
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 SLACK_CLIENT_ID = os.environ["SLACK_OAUTH_CLIENT_ID"]
 SLACK_CLIENT_SECRET = os.environ["SLACK_OAUTH_CLIENT_SECRET"]
 SLACK_REDIRECT_URI = os.environ["SLACK_OAUTH_REDIRECT_URI"]
+
+APP_HOST = os.environ.get("APP_HOST", "0.0.0.0")
+APP_PORT = os.environ.get("APP_PORT", "3000")
 
 async_client = httpx.AsyncClient()
 fastapi_app = FastAPI()
@@ -41,7 +44,7 @@ async def login():
 
 
 @fastapi_app.get("/callback")
-async def callback(code: str = None, error: str = None):
+async def callback(request: Request, code: str = None, error: str = None):
     if error:
         raise HTTPException(status_code=400, detail=f"OAuth error: {error}")
     if not code:
@@ -57,7 +60,7 @@ async def callback(code: str = None, error: str = None):
     )
     body = response.json()
     if body['ok']:
-        return templates.TemplateResponse("success.html", {"access_token": body['authed_user']['access_token']})
+        return templates.TemplateResponse("success.html", {"request": request, "access_token": body['authed_user']['access_token']})
     return body
 
 
@@ -153,4 +156,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    uvicorn.run(fastapi_app, host="0.0.0.0", port=3000, reload=False)
+    uvicorn.run(fastapi_app, host="0.0.0.0", port=int(APP_PORT), reload=False)
