@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>App Installed</title>
+    <style> .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .checkmark {
+        height: 100px;
+        width: 100px;
+        border-radius: 50%;
+        border: 5px solid #4CAF50;
+        position: relative;
+    }
+
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 25%;
+        width: 25%;
+        height: 50%;
+        border: solid #4CAF50;
+        border-width: 0 5px 5px 0;
+        transform: rotate(45deg) translate(-50%, -50%);
+    }
+
+    .code {
+        font-size: 32px;
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .note {
+        text-align: center;
+        margin-top: 20px;
+    }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="checkmark"></div>
+    <h1>授权成功</h1>
+    <p class="code">{{ access_token }} </p>
+    <p class="note"> 请妥善保存此代码，泄露此代码会导致你的账号被盗用。</p>
+</div>
+</body>
+</html>
