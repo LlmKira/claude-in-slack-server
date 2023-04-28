@@ -132,8 +132,10 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
 
     user_id = body["message"]["user"]
     user_ts = request_data.conversation_id or body["message"]["ts"]
-    message_mappings[f"{user_id}-{user_ts}"] = asyncio.Queue()
-    queue = message_mappings[f"{user_id}-{user_ts}"]
+    if f"{user_id}-{user_ts}" not in message_mappings:
+        message_mappings[f"{user_id}-{user_ts}"] = asyncio.Queue()
+
+    queue: asyncio.Queue = message_mappings[f"{user_id}-{user_ts}"]
 
     async def sse_emitter():
         try:
@@ -164,7 +166,8 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
                     return
         finally:
             with contextlib.suppress(KeyError):
-                del message_mappings[f"{user_id}-{user_ts}"]
+                if queue.empty():
+                    del message_mappings[f"{user_id}-{user_ts}"]
 
     return EventSourceResponse(sse_emitter())
 
