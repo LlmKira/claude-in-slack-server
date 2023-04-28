@@ -139,6 +139,10 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
 
     async def sse_emitter():
         try:
+            yield {
+                'event': 'ping',
+                'data': ''
+            }
             while True:
                 if await request.is_disconnected():
                     del message_mappings[f"{user_id}-{user_ts}"]
