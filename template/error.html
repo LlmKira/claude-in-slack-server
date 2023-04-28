@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Error</title>
+    <style>
+        .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .error {
+        height: 100px;
+        width: 100px;
+        border-radius: 50%;
+        border: 5px solid #FF0000;
+        position: relative;
+    }
+
+    .error:before,
+    .error:after {
+        position: absolute;
+        content: "";
+        height: 70px;
+        width: 10px;
+        top: 18%;
+        left: 45%;
+        background-color: #FF0000;
+    }
+
+    .error:before {
+        transform: rotate(45deg);
+    }
+
+    .error:after {
+        transform: rotate(-45deg);
+    }
+
+    .message {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .note {
+        text-align: center;
+        margin-top: 20px;
+    }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="error"></div>
+    <h1>Oops! Something went wrong.</h1>
+    <p class="message">{{ error_msg }}</p>
+    <p class="note">Please try again later or contact support if the problem persists.</p></div>
+</body>
+</html>

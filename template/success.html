@@ -32,7 +32,6 @@
     }
 
     .code {
-        font-size: 32px;
         margin-top: 20px;
         text-align: center;
     }
@@ -41,13 +40,23 @@
         text-align: center;
         margin-top: 20px;
     }
+
+    pre {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    code {
+        display: block;
+        overflow-x: auto;
+        white-space: pre-wrap;
+    }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="checkmark"></div>
     <h1>授权成功</h1>
-    <p class="code">{{ access_token }} </p>
+    <div class="code"><pre><code>{{ access_token }}</code></pre></div>
     <p class="note"> 请妥善保存此代码，泄露此代码会导致你的账号被盗用。</p>
 </div>
 </body>

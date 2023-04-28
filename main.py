@@ -3,7 +3,6 @@ import httpx
 
 import asyncio
 import uuid
-from typing import Dict
 from urllib.parse import quote
 
 import uvicorn
@@ -16,7 +15,7 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from sse_starlette.sse import EventSourceResponse
 
 from model import ConversationResponse, ConversationRequest, Message, Content, Author
-
+from secure import encrypt_token, decrypt_token
 message_mappings = {}
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
@@ -59,9 +58,19 @@ async def callback(request: Request, code: str = None, error: str = None):
         },
     )
     body = response.json()
-    if body['ok']:
-        return templates.TemplateResponse("success.html", {"request": request, "access_token": body['authed_user']['access_token']})
-    return body
+    return (
+        templates.TemplateResponse(
+            "success.html",
+            {
+                "request": request,
+                "access_token": encrypt_token(body['authed_user']['access_token']),
+            },
+        )
+        if body['ok']
+        else templates.TemplateResponse(
+            "error.html", {"request": request, "error_msg": body['error']}
+        )
+    )
 
 
 @slack_app.command("/hello-socket-mode")
@@ -107,7 +116,7 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
     }
 
     resp = await async_client.post(url="https://slack.com/api/chat.postMessage", headers={
-        'Authorization': f'Bearer {access_token}'
+        'Authorization': f'Bearer {decrypt_token(access_token)}'
     }, data=payload)
     body = resp.json()
     if error := body.get('error'):
