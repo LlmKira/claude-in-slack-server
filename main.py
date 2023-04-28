@@ -1,3 +1,4 @@
+import contextlib
 import os
 import httpx
 
@@ -36,8 +37,8 @@ templates = Jinja2Templates(directory="template")
 @fastapi_app.get("/login")
 async def login():
     return RedirectResponse(url=f"https://slack.com/oauth/v2/authorize?"
-                                f"user_scope=chat%3Awrite"
-                                f"&scope=chat%3Awrite"
+                                f"user_scope=chat:write"
+                                f"&scope=chat:write,users:read,channels:history"
                                 f"&client_id={SLACK_CLIENT_ID}"
                                 f"&redirect_uri={quote(SLACK_REDIRECT_URI)}")
 
@@ -134,32 +135,35 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
     queue = message_mappings[f"{user_id}-{user_ts}"]
 
     async def sse_emitter():
-        while True:
-            if await request.is_disconnected():
-                del message_mappings[f"{user_id}-{user_ts}"]
-                return
-            message = await queue.get()
-            message = message.strip()
-            yield {
-                'event': 'data',
-                'data': ConversationResponse(
-                    message=Message(
-                        id=str(uuid.uuid4()),
-                        role="assistant",
-                        content=Content(content_type="text", parts=[message.removesuffix('\n\n_Typing…_')]),
-                        author=Author(role="assistant"), ),
-                    conversation_id=user_ts,
-                    error=None,
-                ).json()
-            }
-            queue.task_done()
-            if not message.endswith('_Typing…_'):
+        try:
+            while True:
+                if await request.is_disconnected():
+                    del message_mappings[f"{user_id}-{user_ts}"]
+                    return
+                message = await queue.get()
+                message = message.strip()
                 yield {
                     'event': 'data',
-                    'data': '[DONE]'
+                    'data': ConversationResponse(
+                        message=Message(
+                            id=str(uuid.uuid4()),
+                            role="assistant",
+                            content=Content(content_type="text", parts=[message.removesuffix('\n\n_Typing…_')]),
+                            author=Author(role="assistant"), ),
+                        conversation_id=user_ts,
+                        error=None,
+                    ).json()
                 }
+                queue.task_done()
+                if not message.endswith('_Typing…_'):
+                    yield {
+                        'event': 'data',
+                        'data': '[DONE]'
+                    }
+                    return
+        finally:
+            with contextlib.suppress(KeyError):
                 del message_mappings[f"{user_id}-{user_ts}"]
-                return
 
     return EventSourceResponse(sse_emitter())
 
