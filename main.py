@@ -108,6 +108,11 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
         response.status_code = status.HTTP_403_FORBIDDEN
         return ConversationResponse(error="You need to provide CHANNEL_ID@ACCESS_TOKEN in Authorization header.")
 
+    try:
+        access_token = decrypt_token(access_token)
+    except ValueError:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return ConversationResponse(error="Invalid ACCESS_TOKEN.")
     prompt = ''.join(request_data.messages[0].content.parts)
     payload = {
         'text': f'<@U0550SE0RQU> {prompt}',
@@ -116,7 +121,7 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
     }
 
     resp = await async_client.post(url="https://slack.com/api/chat.postMessage", headers={
-        'Authorization': f'Bearer {decrypt_token(access_token)}'
+            'Authorization': f'Bearer {access_token}'
     }, data=payload)
     body = resp.json()
     if error := body.get('error'):

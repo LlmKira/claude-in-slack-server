@@ -9,15 +9,16 @@ key = hashlib.sha256(key_str.encode()).digest()
 
 
 def encrypt_token(token):
-    """Encrypts a user's access token"""
     cipher = ChaCha20.new(key=key)
-    encrypted_token = cipher.encrypt(token.encode())
-    return base64.urlsafe_b64encode(encrypted_token).decode()
+    nonce = cipher.nonce
+    ciphertext = cipher.encrypt(token.encode('utf-8'))
+    return base64.b64encode(nonce + ciphertext).decode('utf-8')
 
 
-def decrypt_token(encrypted_token):
-    """Decrypts a user's access token"""
-    cipher = ChaCha20.new(key=key)
-    encrypted_token_bytes = base64.urlsafe_b64decode(encrypted_token.encode())
-    decrypted_token = cipher.decrypt(encrypted_token_bytes)
-    return decrypted_token.decode()
+def decrypt_token(ciphertext):
+    decoded_ciphertext = base64.b64decode(ciphertext.encode('utf-8'))
+    nonce = decoded_ciphertext[:8]
+    ciphertext = decoded_ciphertext[8:]
+    cipher = ChaCha20.new(key=key, nonce=nonce)
+    plaintext = cipher.decrypt(ciphertext)
+    return plaintext.decode('utf-8')
