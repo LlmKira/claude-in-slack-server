@@ -116,9 +116,10 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
         return ConversationResponse(error="Invalid ACCESS_TOKEN.")
     prompt = ''.join(request_data.messages[0].content.parts)
     payload = {
-        'text': f'<@U0550SE0RQU> {prompt}',
+        'text': f'<@claude> {prompt}',
         'channel': channel,
-        "thread_ts": request_data.conversation_id
+        "thread_ts": request_data.conversation_id,
+        "link_names": "true"
     }
 
     resp = await async_client.post(url="https://slack.com/api/chat.postMessage", headers={
