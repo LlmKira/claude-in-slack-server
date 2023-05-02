@@ -1,5 +1,7 @@
 import contextlib
 import os
+
+import emoji
 import httpx
 
 import asyncio
@@ -149,6 +151,7 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
                     return
                 message = await queue.get()
                 message = message.strip()
+                message = emoji.emojize(message, variant="emoji_type", language='alias')
                 yield {
                     'event': 'data',
                     'data': ConversationResponse(
