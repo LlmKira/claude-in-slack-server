@@ -19,6 +19,9 @@ from sse_starlette.sse import EventSourceResponse
 
 from model import ConversationResponse, ConversationRequest, Message, Content, Author
 from secure import encrypt_token, decrypt_token
+
+import html
+
 message_mappings = {}
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
@@ -152,6 +155,7 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
                 message = await queue.get()
                 message = message.strip()
                 message = emoji.emojize(message, variant="emoji_type", language='alias')
+                message = html.unescape(message)
                 yield {
                     'event': 'data',
                     'data': ConversationResponse(
