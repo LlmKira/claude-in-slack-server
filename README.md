@@ -22,18 +22,18 @@ To start this project, you will need to declare following environment variables:
 | SLACK_BOT_TOKEN            | Bot token for Slack API                                 | xoxb-123456789012-123456789012-1234|
 | SLACK_OAUTH_CLIENT_ID      | Client ID for Slack API OAuth 2.0 authentication flow    | 1234567890                        |
 | SLACK_OAUTH_CLIENT_SECRET  | Client secret for Slack API OAuth 2.0 authentication flow| AbCdEfGhIjKlMnOpQrStUvWxYz123456 |
-| SLACK_OAUTH_REDIRECT_URI   | Redirect URI for Slack API OAuth 2.0 authentication flow | http://your_server_ip:4230/callback   |
+| SLACK_OAUTH_REDIRECT_URI   | Redirect URI for Slack API OAuth 2.0 authentication flow | http://your_server_ip:5000/callback   |
 
 Example:
 ```bash
-export "APP_PORT"="4230",
+export "APP_PORT"="5000",
 export "APP_HOST"="0.0.0.0",
 export "ENCRYPTION_KEY"="random_encryption_key_here",
 export "SLACK_APP_TOKEN"="xapp-1-A05xxxxxLGN8-517xxxxxxxxxx-b853xxxxxxxxxxxxxxxd34850xxxxxxxxxxbed3084",
 export "SLACK_BOT_TOKEN"="xoxb-517xxxxxxxxxx-51xxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxx",
 export "SLACK_OAUTH_CLIENT_ID"="517xxxxxxxxxx.5xxxxxxxx",
 export "SLACK_OAUTH_CLIENT_SECRET"="xxxxxxxxxxxxxxxxxxx",
-export "SLACK_OAUTH_REDIRECT_URI"="http://your_server_ip:4230/callback",
+export "SLACK_OAUTH_REDIRECT_URI"="http://your_server_ip:5000/callback",
 ```
 
 ## Example Server
