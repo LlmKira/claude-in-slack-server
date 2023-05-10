@@ -96,6 +96,29 @@ async def event_message(say, event, message):
             await queue.join()
 
 
+@fastapi_app.get('/backend-api/revoke')
+async def revoke(request: Request, response: Response):
+    # Perform some processing on the request data
+    channel, access_token = request.headers \
+        .get('Authorization', '@') \
+        .removeprefix('Bearer ') \
+        .split('@', 1)
+    if not access_token:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return ConversationResponse(error="You need to provide CHANNEL_ID@ACCESS_TOKEN in Authorization header.")
+
+    try:
+        access_token = decrypt_token(access_token)
+    except ValueError:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return ConversationResponse(error="Invalid ACCESS_TOKEN.")
+
+    resp = await async_client.get(url="https://slack.com/api/auth.revoke", headers={
+            'Authorization': f'Bearer {access_token}'
+    })
+    return resp.json()
+
+
 @fastapi_app.get('/backend-api/conversations')
 async def conversations():
     return {
@@ -120,8 +143,14 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
         response.status_code = status.HTTP_403_FORBIDDEN
         return ConversationResponse(error="Invalid ACCESS_TOKEN.")
     prompt = ''.join(request_data.messages[0].content.parts)
+
+    if ':' in channel:
+        channel, bot_id = channel.split(':', 1)
+    else:
+        bot_id = 'claude'
+
     payload = {
-        'text': f'<@claude> {prompt}',
+        'text': f'<@{bot_id}> {prompt}',
         'channel': channel,
         "thread_ts": request_data.conversation_id,
         "link_names": "true"
