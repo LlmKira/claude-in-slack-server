@@ -7,3 +7,6 @@ slack-bolt~=1.18.0
 slack-sdk~=3.21.2
 emoji
 pycryptodomex
+aiohttp
+sse_starlette
+jinja2
