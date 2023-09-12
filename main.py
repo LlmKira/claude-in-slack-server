@@ -32,6 +32,11 @@ SLACK_REDIRECT_URI = os.environ["SLACK_OAUTH_REDIRECT_URI"]
 APP_HOST = os.environ.get("APP_HOST", "0.0.0.0")
 APP_PORT = os.environ.get("APP_PORT", "3000")
 
+SSE_MSG_DONE = { 'event': 'data', 'data': '[DONE]'}
+SSE_MSG_PING = { 'event': 'ping', 'data': ''}
+
+TIMEOUT_SECONDS = 30
+
 async_client = httpx.AsyncClient()
 fastapi_app = FastAPI()
 slack_app = AsyncApp(token=SLACK_BOT_TOKEN)
@@ -166,22 +171,21 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
 
     user_id = body["message"]["user"]
     user_ts = request_data.conversation_id or body["message"]["ts"]
-    if f"{user_id}-{user_ts}" not in message_mappings:
-        message_mappings[f"{user_id}-{user_ts}"] = asyncio.Queue()
+    
+    key = f"{user_id}-{user_ts}"
+    if key not in message_mappings:
+        message_mappings[key] = asyncio.Queue()
 
-    queue: asyncio.Queue = message_mappings[f"{user_id}-{user_ts}"]
+    queue: asyncio.Queue = message_mappings[key]
 
     async def sse_emitter():
         try:
-            yield {
-                'event': 'ping',
-                'data': ''
-            }
+            yield SSE_MSG_PING
             while True:
                 if await request.is_disconnected():
-                    del message_mappings[f"{user_id}-{user_ts}"]
+                    del message_mappings[key]
                     return
-                message = await queue.get()
+                message = await asyncio.wait_for(queue.get(), TIMEOUT_SECONDS)
                 message = message.strip()
                 message = emoji.emojize(message, variant="emoji_type", language='alias')
                 message = html.unescape(message)
@@ -199,16 +203,14 @@ async def conversation(request_data: ConversationRequest, request: Request, resp
                 }
                 queue.task_done()
                 if not message.endswith('_Typing…_'):
-                    yield {
-                        'event': 'data',
-                        'data': '[DONE]'
-                    }
                     return
+        except asyncio.exceptions.TimeoutError:
+            print(f"Key {key} has been forced-teriminated due to timeout over {TIMEOUT_SECONDS} seconds.")
         finally:
+            yield SSE_MSG_DONE
             with contextlib.suppress(KeyError):
                 if queue.empty():
-                    del message_mappings[f"{user_id}-{user_ts}"]
-
+                    del message_mappings[key]
     return EventSourceResponse(sse_emitter())
 
 
