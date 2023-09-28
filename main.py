@@ -93,8 +93,10 @@ async def hello_command(ack, body):
 @slack_app.event("message")
 async def event_message(say, event, message):
     if message.get('subtype') == 'message_changed':
-        user_id = message['message']['parent_user_id']
-        user_ts = message['message']['thread_ts']
+        user_id = message['message'].get('parent_user_id')
+        user_ts = message['message'].get('thread_ts')
+        if not user_id or not user_ts:
+            return
         text = message['message']['text']
         if queue := message_mappings.get(f"{user_id}-{user_ts}"):
             await queue.put(text)
